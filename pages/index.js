@@ -1,8 +1,45 @@
 import Head from 'next/head'
 import Image from 'next/image'
 import styles from '../styles/Home.module.css'
+import { useState } from 'react'
+export default function Home({users}) {
+  const [usersState,setUserState] = useState(users)
+  const random = (length) => {
+    let chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+     // Pick characers randomly
+     let str = '';
+     for (let i = 0; i < length; i++) {
+         str += chars.charAt(Math.floor(Math.random() * chars.length));
+     }
+    return str
+  }
 
-export default function Home() {
+  const findAllUser = async () => {
+    const res = await fetch('http://localhost:3000/api/test/getAllUser')
+    const users = await res.json()
+    setUserState(users.test)
+  }
+
+  const addNewUser = async () => {
+    const name = random(6)
+    const email = random(13)
+    const postBody = {
+      name: name,
+      email: email
+    }
+    const res = await fetch('http://localhost:3000/api/test/add',{
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json'
+      },
+      body: JSON.stringify(postBody)
+    })
+    const resjson = await res.json()
+    console.log(resjson)
+
+    findAllUser()
+  } 
+
   return (
     <div className={styles.container}>
       <Head>
@@ -16,39 +53,20 @@ export default function Home() {
           Welcome to <a href="https://nextjs.org">Next.js!</a>
         </h1>
 
-        <p className={styles.description}>
-          Get started by editing{' '}
-          <code className={styles.code}>pages/index.js</code>
+        <p className={styles.description} onClick={addNewUser}>
+          ADD NEW USER
         </p>
 
         <div className={styles.grid}>
-          <a href="https://nextjs.org/docs" className={styles.card}>
-            <h2>Documentation &rarr;</h2>
-            <p>Find in-depth information about Next.js features and API.</p>
-          </a>
-
-          <a href="https://nextjs.org/learn" className={styles.card}>
-            <h2>Learn &rarr;</h2>
-            <p>Learn about Next.js in an interactive course with quizzes!</p>
-          </a>
-
-          <a
-            href="https://github.com/vercel/next.js/tree/canary/examples"
-            className={styles.card}
-          >
-            <h2>Examples &rarr;</h2>
-            <p>Discover and deploy boilerplate example Next.js projects.</p>
-          </a>
-
-          <a
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-            className={styles.card}
-          >
-            <h2>Deploy &rarr;</h2>
-            <p>
-              Instantly deploy your Next.js site to a public URL with Vercel.
-            </p>
-          </a>
+          {
+            usersState.map((user,index )=> (
+              <a href="https://nextjs.org/docs" className={styles.card} key={index}>
+                <h2>{user.name}</h2>
+                <p>{user.email}</p>
+              </a>
+            ))
+          }
+          
         </div>
       </main>
 
@@ -66,4 +84,13 @@ export default function Home() {
       </footer>
     </div>
   )
+}
+
+export async function getServerSideProps(context) {
+  const res = await fetch('http://localhost:3000/api/test/getAllUser')
+  const users = await res.json()
+  
+  return {
+    props: {users: users.test}, 
+  }
 }
